@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Trophy, Target, RefreshCw } from 'lucide-react';
+import { BookOpen, Trophy, Target, RefreshCw, Percent } from 'lucide-react';
 
 // 成语数据
 const idioms = [
@@ -155,6 +155,7 @@ export default function Home() {
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
+              <Percent className="w-8 h-8 text-green-500 mx-auto mb-2" />
               <div className="text-2xl font-bold text-gray-800">
                 {totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0}%
               </div>
