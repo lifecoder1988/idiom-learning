@@ -316,7 +316,7 @@ export default function Home() {
 
         {/* 页脚 */}
         <div className="text-center mt-8 text-gray-500">
-          <p>祝你的朋友博士考试顺利！📚</p>
+          <p>祝你的朋友Dr.Yu考试顺利！📚</p>
         </div>
       </div>
     </div>
