@@ -7,81 +7,91 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Trophy, Target, RefreshCw, Percent } from 'lucide-react';
 
-// 成语数据
-const idioms = [
-  {
-    idiom: '画蛇添足',
-    pinyin: 'huà shé tiān zú',
-    meaning: '画蛇时给蛇添上脚。比喻做了多余的事，非但无益，反而不合适。',
-    example: '这幅画已经很完美了，你再加些装饰就是画蛇添足了。',
-    difficulty: '中级'
-  },
-  {
-    idiom: '守株待兔',
-    pinyin: 'shǒu zhū dài tù',
-    meaning: '原比喻希图不经过努力而得到成功的侥幸心理。现也比喻死守狭隘经验，不知变通。',
-    example: '学习不能守株待兔，要主动探索新知识。',
-    difficulty: '初级'
-  },
-  {
-    idiom: '杯弓蛇影',
-    pinyin: 'bēi gōng shé yǐng',
-    meaning: '将映在酒杯里的弓影误认为蛇。比喻因疑神疑鬼而引起恐惧。',
-    example: '他总是杯弓蛇影，把别人的善意当成恶意。',
-    difficulty: '高级'
-  },
-  {
-    idiom: '亡羊补牢',
-    pinyin: 'wáng yáng bǔ láo',
-    meaning: '羊逃跑了再去修补羊圈，还不算晚。比喻出了问题以后想办法补救，可以防止继续受损失。',
-    example: '虽然考试失利了，但现在努力学习还不晚，亡羊补牢，为时未晚。',
-    difficulty: '中级'
-  },
-  {
-    idiom: '刻舟求剑',
-    pinyin: 'kè zhōu qiú jiàn',
-    meaning: '比喻不懂事物已发展变化而仍静止地看问题。',
-    example: '时代在发展，我们不能刻舟求剑，要与时俱进。',
-    difficulty: '中级'
-  },
-  {
-    idiom: '掩耳盗铃',
-    pinyin: 'yǎn ěr dào líng',
-    meaning: '偷铃铛怕别人听见而捂住自己的耳朵。比喻自己欺骗自己，明明掩盖不住的事情偏要想法子掩盖。',
-    example: '他这种做法纯属掩耳盗铃，问题迟早会暴露的。',
-    difficulty: '初级'
-  },
-  {
-    idiom: '叶公好龙',
-    pinyin: 'yè gōng hào lóng',
-    meaning: '比喻口头上说爱好某事物，实际上并不真爱好。',
-    example: '他说喜欢古典音乐，但从不去听音乐会，这就是叶公好龙。',
-    difficulty: '高级'
-  },
-  {
-    idiom: '塞翁失马',
-    pinyin: 'sài wēng shī mǎ',
-    meaning: '比喻一时虽然受到损失，也许反而因此能得到好处。也指坏事在一定条件下可变为好事。',
-    example: '他失业后反而找到了更好的工作，真是塞翁失马，焉知非福。',
-    difficulty: '高级'
+// 成语接口类型
+interface Idiom {
+  word: string;
+  pinyin: string;
+  explanation: string;
+  example: string;
+  derivation: string;
+  abbreviation: string;
+}
+
+// 转换API数据为组件所需格式
+const transformIdiomData = (apiIdiom: Idiom) => {
+  // 根据成语长度和复杂度简单判断难度
+  const getDifficulty = (word: string, explanation: string) => {
+    if (!word || !explanation) return '中级';
+    if (word.length <= 4 && explanation.length <= 30) return '初级';
+    if (word.length <= 4 && explanation.length <= 60) return '中级';
+    return '高级';
+  };
+
+  return {
+    idiom: apiIdiom.word || '未知成语',
+    pinyin: apiIdiom.pinyin || '',
+    meaning: apiIdiom.explanation || '暂无释义',
+    example: apiIdiom.example || '暂无例句',
+    difficulty: getDifficulty(apiIdiom.word, apiIdiom.explanation)
+  };
+};
+
+// 获取随机成语的API调用函数
+const fetchRandomIdiom = async () => {
+  try {
+    const response = await fetch('/api/idiom');
+    if (!response.ok) {
+      throw new Error('Failed to fetch idiom');
+    }
+    const data = await response.json();
+    return transformIdiomData(data.data);
+  } catch (error) {
+    console.error('Error fetching idiom:', error);
+    // 返回默认成语作为后备
+    return {
+      idiom: '画蛇添足',
+      pinyin: 'huà shé tiān zú',
+      meaning: '画蛇时给蛇添上脚。比喻做了多余的事，非但无益，反而不合适。',
+      example: '这幅画已经很完美了，你再加些装饰就是画蛇添足了。',
+      difficulty: '中级'
+    };
   }
-];
+};
 
 export default function Home() {
-  const [currentIdiom, setCurrentIdiom] = useState(idioms[0]);
+  const [currentIdiom, setCurrentIdiom] = useState({
+    idiom: '加载中...',
+    pinyin: '',
+    meaning: '正在获取成语数据...',
+    example: '',
+    difficulty: '中级'
+  });
   const [userAnswer, setUserAnswer] = useState('');
   const [showAnswer, setShowAnswer] = useState(false);
   const [score, setScore] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [gameMode, setGameMode] = useState<'meaning' | 'example' | 'mixed'>('meaning');
   const [studyMode, setStudyMode] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const getRandomIdiom = () => {
-    const randomIndex = Math.floor(Math.random() * idioms.length);
-    setCurrentIdiom(idioms[randomIndex]);
-    setUserAnswer('');
-    setShowAnswer(false);
+  const getRandomIdiom = async () => {
+    setLoading(true);
+    try {
+      const newIdiom = await fetchRandomIdiom();
+      setCurrentIdiom(newIdiom);
+      setUserAnswer('');
+      setShowAnswer(false);
+    } catch (error) {
+      console.error('Error getting random idiom:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // 组件挂载时获取第一个成语
+  useEffect(() => {
+    getRandomIdiom();
+  }, []);
 
   const checkAnswer = () => {
     if (userAnswer.trim().toLowerCase() === currentIdiom.idiom.toLowerCase()) {
@@ -91,14 +101,14 @@ export default function Home() {
     setShowAnswer(true);
   };
 
-  const nextQuestion = () => {
-    getRandomIdiom();
+  const nextQuestion = async () => {
+    await getRandomIdiom();
   };
 
-  const resetGame = () => {
+  const resetGame = async () => {
     setScore(0);
     setTotalQuestions(0);
-    getRandomIdiom();
+    await getRandomIdiom();
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -293,9 +303,9 @@ export default function Home() {
 
         {/* 操作按钮 */}
         <div className="flex flex-wrap gap-2 justify-center">
-          <Button onClick={getRandomIdiom} variant="outline">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            换一个成语
+          <Button onClick={getRandomIdiom} variant="outline" disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? '加载中...' : '换一个成语'}
           </Button>
           {!studyMode && (
             <Button onClick={resetGame} variant="outline">
